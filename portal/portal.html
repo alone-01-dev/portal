@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Assessment Portal</title>
+    <style>
+        :root {
+            --primary: #4a6da7;
+            --secondary: #7b9acc;
+            --light: #f5f7fa;
+            --dark: #2c3e50;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .role-selector {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .portal {
+            background: white;
+            border-radius: 0 0 5px 5px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        input[type="text"], 
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .question-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .delete-question {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--danger);
+            cursor: pointer;
+        }
+        
+        .student-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th, 
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .results-table th {
+            background-color: var(--light);
+        }
+        
+        .share-link {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Student Assessment Portal</h1>
+            <div class="role-selector">
+                <button id="teacherViewBtn" class="btn btn-primary">Teacher View</button>
+                <button id="studentViewBtn" class="btn btn-secondary">Student View</button>
+            </div>
+        </header>
+        
+        <!-- Teacher Portal -->
+        <div id="teacherPortal" class="portal">
+            <h2>Create Assessment</h2>
+            
+            <div class="form-group">
+                <label for="assessmentTitle">Assessment Title</label>
+                <input type="text" id="assessmentTitle" placeholder="Enter assessment title">
+            </div>
+            
+            <h3>Questions</h3>
+            <div id="questionsContainer">
+                <!-- Questions will be added here dynamically -->
+            </div>
+            
+            <button id="addQuestionBtn" class="btn btn-secondary">Add Question</button>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <button id="saveAssessmentBtn" class="btn btn-primary">Save Assessment</button>
+                <button id="generateLinkBtn" class="btn btn-success">Generate Student Link</button>
+            </div>
+            
+            <div id="shareLinkContainer" class="share-link hidden">
+                <p>Share this link with your students:</p>
+                <p id="shareLink"></p>
+            </div>
+            
+            <h2 style="margin-top: 40px;">Student Results</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <!-- Results will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Student Portal -->
+        <div id="studentPortal" class="portal hidden">
+            <h2>Student Assessment</h2>
+            
+            <div class="student-info">
+                <div class="form-group">
+                    <label for="studentId">Student ID</label>
+                    <input type="text" id="studentId" placeholder="Enter your student ID">
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentName">Full Name</label>
+                    <input type="text" id="studentName" placeholder="Enter your full name">
+                </div>
+            </div>
+            
+            <div id="studentQuestionsContainer">
+                <!-- Assessment questions for students will appear here -->
+            </div>
+            
+            <button id="submitAssessmentBtn" class="btn btn-success">Submit Answers</button>
+        </div>
+        
+        <div id="notification" class="notification">
+            Operation completed successfully!
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const teacherViewBtn = document.getElementById('teacherViewBtn');
+            const studentViewBtn = document.getElementById('studentViewBtn');
+            const teacherPortal = document.getElementById('teacherPortal');
+            const studentPortal = document.getElementById('studentPortal');
+            const questionsContainer = document.getElementById('questionsContainer');
+            const addQuestionBtn = document.getElementById('addQuestionBtn');
+            const saveAssessmentBtn = document.getElementById('saveAssessmentBtn');
+            const generateLinkBtn = document.getElementById('generateLinkBtn');
+            const shareLinkContainer = document.getElementById('shareLinkContainer');
+            const shareLink = document.getElementById('shareLink');
+            const studentQuestionsContainer = document.getElementById('studentQuestionsContainer');
+            const submitAssessmentBtn = document.getElementById('submitAssessmentBtn');
+            const resultsBody = document.getElementById('resultsBody');
+            const notification = document.getElementById('notification');
+            
+            // State management
+            let questions = [];
+            let studentAnswers = {};
+            let assessmentResults = JSON.parse(localStorage.getItem('assessmentResults')) || [];
+            
+            // View toggle
+            teacherViewBtn.addEventListener('click', () => {
+                teacherPortal.classList.remove('hidden');
+                studentPortal.classList.add('hidden');
+                loadResults();
+            });
+            
+            studentViewBtn.addEventListener('click', () => {
+                teacherPortal.classList.add('hidden');
+                studentPortal.classList.remove('hidden');
+                loadStudentAssessment();
+            });
+            
+            // Add question
+            addQuestionBtn.addEventListener('click', () => {
+                const questionId = Date.now();
+                const questionHTML = `
+                    <div class="question-item" data-id="${questionId}">
+                        <span class="delete-question">×</span>
+                        <div class="form-group">
+                            <label>Question</label>
+                            <textarea placeholder="Enter your question" class="question-text"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Correct Answer</label>
+                            <input type="text" placeholder="Enter correct answer" class="correct-answer">
+                        </div>
+                        <div class="form-group">
+                            <label>Points</label>
+                            <input type="number" value="1" min="1" class="question-points">
+                        </div>
+                    </div>
+                `;
+                
+                questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+                
+                // Add delete functionality
+                const newQuestion = questionsContainer.lastElementChild;
+                newQuestion.querySelector('.delete-question').addEventListener('click', function() {
+                    newQuestion.remove();
+                });
+            });
+            
+            // Save assessment
+            saveAssessmentBtn.addEventListener('click', () => {
+                const questionItems = questionsContainer.querySelectorAll('.question-item');
+                questions = [];
+                
+                questionItems.forEach(item => {
+                    const id = item.getAttribute('data-id');
+                    const text = item.querySelector('.question-text').value;
+                    const answer = item.querySelector('.correct-answer').value;
+                    const points = parseInt(item.querySelector('.question-points').value) || 1;
+                    
+                    if (text && answer) {
+                        questions.push({
+                            id,
+                            text,
+                            answer,
+                            points
+                        });
+                    }
+                });
+                
+                localStorage.setItem('assessmentQuestions', JSON.stringify(questions));
+                showNotification('Assessment saved successfully!');
+            });
+            
+            // Generate shareable link
+            generateLinkBtn.addEventListener('click', () => {
+                if (questions.length === 0) {
+                    showNotification('Please save your assessment with questions first.', 'error');
+                    return;
+                }
+                
+                const currentUrl = window.location.href.split('?')[0];
+                const studentLink = `${currentUrl}?role=student`;
+                shareLink.textContent = studentLink;
+                shareLinkContainer.classList.remove('hidden');
+            });
+            
+            // Load student assessment
+            function loadStudentAssessment() {
+                const savedQuestions = JSON.parse(localStorage.getItem('assessmentQuestions')) || [];
+                
+                if (savedQuestions.length === 0) {
+                    studentQuestionsContainer.innerHTML = '<p>No assessment available. Please check with your teacher.</p>';
+                    return;
+                }
+                
+                let questionsHTML = '<h3>Answer the following questions:</h3>';
+                
+                savedQuestions.forEach((q, index) => {
+                    questionsHTML += `
+                        <div class="question-item">
+                            <div class="form-group">
+                                <label>Q${index + 1}: ${q.text}</label>
+                                <input type="text" data-id="${q.id}" placeholder="Type your answer here" class="student-answer">
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                studentQuestionsContainer.innerHTML = questionsHTML;
+            }
+            
+            // Submit assessment
+            submitAssessmentBtn.addEventListener('click', () => {
+                const studentId = document.getElementById('studentId').value;
+                const studentName = document.getElementById('studentName').value;
+                
+                if (!studentId || !studentName) {
+                    showNotification('Please enter your student ID and name.', 'error');
+                    return;
+                }
+                
+                const answerInputs = studentQuestionsContainer.querySelectorAll('.student-answer');
+                const savedQuestions = JSON.parse(localStorage.getItem('assessmentQuestions')) || [];
+                
+                let score = 0;
+                let totalPoints = 0;
+                studentAnswers = {};
+                
+                answerInputs.forEach(input => {
+                    const questionId = input.getAttribute('data-id');
+                    const studentAnswer = input.value.trim();
+                    const question = savedQuestions.find(q => q.id === questionId);
+                    
+                    if (question) {
+                        totalPoints += question.points;
+                        
+                        if (studentAnswer.toLowerCase() === question.answer.toLowerCase()) {
+                            score += question.points;
+                        }
+                        
+                        studentAnswers[questionId] = studentAnswer;
+                    }
+                });
+                
+                const percentage = Math.round((score / totalPoints) * 100);
+                
+                // Save results
+                const result = {
+                    studentId,
+                    studentName,
+                    score: `${score}/${totalPoints} (${percentage}%)`,
+                    answers: studentAnswers,
+                    timestamp: new Date().toISOString()
+                };
+                
+                assessmentResults.push(result);
+                localStorage.setItem('assessmentResults', JSON.stringify(assessmentResults));
+                
+                showNotification(`Assessment submitted! Your score: ${score}/${totalPoints} (${percentage}%)`);
+                
+                // Clear form
+                document.getElementById('studentId').value = '';
+                document.getElementById('studentName').value = '';
+                answerInputs.forEach(input => input.value = '');
+            });
+            
+            // Load results
+            function loadResults() {
+                resultsBody.innerHTML = '';
+                
+                if (assessmentResults.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No results yet</td></tr>';
+                    return;
+                }
+                
+                assessmentResults.forEach(result => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${result.studentId}</td>
+                        <td>${result.studentName}</td>
+                        <td>${result.score}</td>
+                        <td>
+                            <button class="btn btn-secondary view-details-btn">View Details</button>
+                            <button class="btn btn-danger delete-result-btn">Delete</button>
+                        </td>
+                    `;
+                    
+                    resultsBody.appendChild(row);
+                    
+                    // Add event listeners
+                    row.querySelector('.view-details-btn').addEventListener('click', () => {
+                        alert(`Student: ${result.studentName}\nScore: ${result.score}\nSubmitted: ${new Date(result.timestamp).toLocaleString()}`);
+                    });
+                    
+                    row.querySelector('.delete-result-btn').addEventListener('click', () => {
+                        if (confirm('Are you sure you want to delete this result?')) {
+                            assessmentResults = assessmentResults.filter(r => r.timestamp !== result.timestamp);
+                            localStorage.setItem('assessmentResults', JSON.stringify(assessmentResults));
+                            loadResults();
+                            showNotification('Result deleted successfully');
+                        }
+                    });
+                });
+            }
+            
+            // Show notification
+            function showNotification(message, type = 'success') {
+                notification.textContent = message;
+                notification.style.backgroundColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+                notification.style.display = 'block';
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Check URL parameters for role
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('role') === 'student') {
+                studentViewBtn.click();
+            }
+            
+            // Initialize
+            loadResults();
+        });
+    </script>
+</body>
+</html>
